@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maze Game for Praew</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f7e7f7;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      flex-direction: column;
+    }
+
+    #start-screen {
+      text-align: center;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    #start-screen h1 {
+      color: #bd83ce;
+      font-size: 3rem;
+      margin-bottom: 20px;
+      animation: slideDown 1s ease-in-out;
+    }
+
+    #start-screen p {
+      color: #333;
+      font-size: 1.2rem;
+      margin-bottom: 30px;
+      animation: slideUp 1s ease-in-out;
+    }
+
+    #start-button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      background-color: #bd83ce;
+      color: #ffffff;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+
+    #start-button:hover {
+      transform: scale(1.1);
+      background-color: #e5b0eb;
+    }
+
+    #game-container {
+      position: relative;
+      width: 90vmin;
+      height: 90vmin;
+      background-color: #e5b0eb;
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      display: none;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    #maze {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(20, 1fr);
+      grid-template-rows: repeat(20, 1fr);
+      gap: 2px;
+    }
+
+    .wall {
+      background-color: #bd83ce;
+      border-radius: 5px;
+    }
+
+    .path {
+      background-color: #f1c5e7;
+    }
+
+    #player {
+      position: absolute;
+      width: 4.5%;
+      height: 4.5%;
+      background-color: #ffffff;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    #mail {
+      position: absolute;
+      width: 4.5%;
+      height: 4.5%;
+      background-color: #ffffff;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.5vmin;
+      color: #bd83ce;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    #controller {
+      margin-top: 20px;
+      display: none; /* Initially hidden */
+      grid-template-areas:
+        ". up ."
+        "left . right"
+        ". down .";
+      gap: 10px;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    .control-btn {
+      width: 50px;
+      height: 50px;
+      background-color: #bd83ce;
+      border: none;
+      border-radius: 50%;
+      color: #ffffff;
+      font-size: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+
+    .control-btn:active {
+      background-color: #e5b0eb;
+    }
+
+    .control-btn:hover {
+      transform: scale(1.1);
+    }
+
+    #up { grid-area: up; }
+    #left { grid-area: left; }
+    #right { grid-area: right; }
+    #down { grid-area: down; }
+
+    #popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      display: none;
+      z-index: 1000;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    #popup h2 {
+      color: #bd83ce;
+      margin-bottom: 10px;
+    }
+
+    #popup p {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    #popup button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      background-color: #bd83ce;
+      color: #ffffff;
+      cursor: pointer;
+      margin: 0 10px;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+
+    #popup button:hover {
+      transform: scale(1.1);
+      background-color: #e5b0eb;
+    }
+
+    #terminal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #000;
+      color: #00ff00;
+      font-family: monospace;
+      font-size: 20px;
+      display: none;
+      overflow: hidden;
+      z-index: 1001;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    #terminal-content {
+      white-space: pre;
+      padding: 20px;
+    }
+
+    #error-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #000;
+      color: #ff0000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: monospace;
+      font-size: 24px;
+      display: none;
+      z-index: 1002;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    #picture-container {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    #picture-container img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Keyframes for animations */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Media query for phones */
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+
+      #controller {
+        margin-top: 20px;
+      }
+    }
+
+    /* Media query for PCs and iPads */
+    @media (min-width: 769px) {
+      body {
+        flex-direction: row;
+      }
+
+      #controller {
+        margin-left: 20px;
+        margin-top: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="start-screen">
+    <h1>Maze Game For Praew</h1>
+    <p>⭕Find the mail in the maze to reveal a special message! ⌨️Use the controls to move the ball.</p>
+    <button id="start-button">Start Game</button>
+    <div id="picture-container">
+      <img src="cat.png" alt="Picture">
+    </div>
+  </div>
+
+  <div id="game-container">
+    <div id="maze"></div>
+    <div id="player"></div>
+    <div id="mail">MAIL</div>
+  </div>
+  <div id="controller">
+    <button id="up" class="control-btn">↑</button>
+    <button id="left" class="control-btn">←</button>
+    <button id="right" class="control-btn">→</button>
+    <button id="down" class="control-btn">↓</button>
+  </div>
+
+  <div id="popup">
+    <h2>💌You've found a mail!</h2>
+    <p>Do you want to read it? 📩</p>
+    <button id="yes-btn">Yes</button>
+    <button id="no-btn">No</button>
+  </div>
+
+  <div id="terminal">
+    <div id="terminal-content"></div>
+  </div>
+
+  <div id="error-screen">
+    ERROR: PLEASE OPEN IT BEGGING FROM MY HEART
+  </div>
+
+  <audio id="bg-music" loop>
+    <source src="Russian Roulette.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <script>
+    const startScreen = document.getElementById('start-screen');
+    const gameContainer = document.getElementById('game-container');
+    const maze = document.getElementById('maze');
+    const player = document.getElementById('player');
+    const mail = document.getElementById('mail');
+    const popup = document.getElementById('popup');
+    const terminal = document.getElementById('terminal');
+    const terminalContent = document.getElementById('terminal-content');
+    const errorScreen = document.getElementById('error-screen');
+    const bgMusic = document.getElementById('bg-music');
+    const startButton = document.getElementById('start-button');
+    const controller = document.getElementById('controller');
+    const pictureContainer = document.getElementById('picture-container');
+
+    const mazeLayout = [
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],  
+    [1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1],  
+    [1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1],  
+    [1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1],  
+    [1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],  
+    [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1], 
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1],  
+    [1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1],  
+    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],  
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],  
+    [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+    [1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],  
+    [1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  
+    [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1],  
+    [1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],  
+    [1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    ];
+
+    const cellSize = 5; // Adjusted for 20x20 grid
+    let playerPos = { x: 1, y: 1 };
+    let mailPos = { x: 18, y: 18 };
+
+    // Generate maze
+    function generateMaze() {
+      maze.innerHTML = '';
+      for (let y = 0; y < mazeLayout.length; y++) {
+        for (let x = 0; x < mazeLayout[y].length; x++) {
+          const cell = document.createElement('div');
+          cell.classList.add(mazeLayout[y][x] === 1 ? 'wall' : 'path');
+          maze.appendChild(cell);
+        }
+      }
+    }
+
+    // Position player and mail
+    function positionElements() {
+      player.style.left = `${playerPos.x * cellSize}%`;
+      player.style.top = `${playerPos.y * cellSize}%`;
+      mail.style.left = `${mailPos.x * cellSize}%`;
+      mail.style.top = `${mailPos.y * cellSize}%`;
+    }
+
+    // Check collision
+    function checkCollision() {
+      if (playerPos.x === mailPos.x && playerPos.y === mailPos.y) {
+        bgMusic.volume = 0.2; // Lower the volume
+        popup.style.display = 'block';
+      }
+    }
+
+    // Move player
+    function movePlayer(dx, dy) {
+      const newX = playerPos.x + dx;
+      const newY = playerPos.y + dy;
+      if (mazeLayout[newY][newX] !== 1) {
+        playerPos.x = newX;
+        playerPos.y = newY;
+        positionElements();
+        checkCollision();
+      }
+    }
+
+        // Controller buttons
+        document.getElementById('up').addEventListener('click', () => movePlayer(0, -1));
+    document.getElementById('left').addEventListener('click', () => movePlayer(-1, 0));
+    document.getElementById('right').addEventListener('click', () => movePlayer(1, 0));
+    document.getElementById('down').addEventListener('click', () => movePlayer(0, 1));
+
+    // Popup buttons
+    document.getElementById('yes-btn').addEventListener('click', () => {
+      popup.style.display = 'none';
+      popup.innerHTML = `
+        <h2>ชอบแพรวนะ💗</h2>
+        <p>คือ 🤔ตอนแรกก็ไม่ได้อะไรหรอก แต่แบบก็เริ่มค้นหาแพรวมากขึ้นแล้วรู้สึกว่าแพรวเป็นคนที่น่ารักดีนะ👍 เป็นคนเรียบร้อย และเป็นคนดูมีชีวิตชีวาอะ บางทีเราก็ชอบอะไรคล้ายๆกันด้วย55 ก็เลยจะบอกว่าชอบนะ ชอบจริงจัง จีบได้มั้ย💗</p>
+      `;
+      popup.style.display = 'block';
+      bgMusic.volume = 0.2; // Keep the volume low
+    });
+
+    document.getElementById('no-btn').addEventListener('click', () => {
+      popup.style.display = 'none';
+      terminal.style.display = 'block';
+      simulateTerminal();
+    });
+
+    // Simulate terminal
+    function simulateTerminal() {
+      const lines = [
+        "Initializing system...",
+        "Accessing mainframe...",
+        "Decrypting files...",
+        "ERROR: Unauthorized access detected!",
+        "Initiating system lockdown...",
+        "SYSTEM HACKED!"
+      ];
+      let i = 0;
+      const interval = setInterval(() => {
+        if (i < lines.length) {
+          terminalContent.textContent += lines[i] + "\n";
+          i++;
+        } else {
+          clearInterval(interval);
+          terminal.style.display = 'none';
+          errorScreen.style.display = 'flex';
+        }
+      }, 1000);
+    }
+
+    // Start game
+    startButton.addEventListener('click', () => {
+      startScreen.style.display = 'none'; // Hide the start screen
+      gameContainer.style.display = 'block'; // Show the game container
+      controller.style.display = 'grid'; // Show the controller
+      generateMaze();
+      positionElements();
+      bgMusic.play();
+      bgMusic.volume = 1; // Reset volume to normal when starting the game
+    });
+  </script>
+</body>
+</html>
